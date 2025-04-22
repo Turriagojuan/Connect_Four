@@ -25,10 +25,22 @@
             </intent-filter>
         </activity>
 
-
+        <!-- Pantalla de juego -->
         <activity
             android:name=".GameActivity"
             android:exported="false" />
+
+        <!-- Pantalla de victoria -->
+        <activity
+            android:name=".VictoryActivity"
+            android:exported="false" />
+
+        <!-- Pantalla de derrota -->
+        <activity
+            android:name=".DefeatActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>
+

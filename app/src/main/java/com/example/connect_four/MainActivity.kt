@@ -128,7 +128,7 @@ fun HomeScreen(onPlay: (String) -> Unit) {
 
         // Botón
         Button(
-            onClick = { onPlay(userName)},
+            onClick = { onPlay(if (userName.isBlank()) "Tú" else userName) },
             shape = RoundedCornerShape(50),
             modifier = Modifier
                 .height(70.dp)
