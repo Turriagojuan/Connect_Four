@@ -4,63 +4,40 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.connect_four.ui.theme.ConnectFourTheme
+import com.example.connect_four.ui.theme.InGameScreen // Assuming this is your composable
 
 class GameActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val playerName = intent.getStringExtra("playerName") ?: "Jugador"
+
+        val playerName = intent.getStringExtra("PLAYER_NAME") ?: "Jugador"
 
         setContent {
-            GameScreen(playerName = playerName)
+            ConnectFourTheme {
+                InGameScreen(playerName = playerName) { winner ->
+                    when (winner) {
+                        Cell.PLAYER -> {
+                            val intent = Intent(this, VictoryActivity::class.java)
+                            intent.putExtra("PLAYER_NAME", playerName)
+                            startActivity(intent)
+                            finish()
+                        }
+                        Cell.MACHINE -> {
+                            val intent = Intent(this, DefeatActivity::class.java)
+                            intent.putExtra("PLAYER_NAME", playerName)
+                            startActivity(intent)
+                            finish()
+                        }
+                        null -> {
+                            val intent = Intent(this, DrawActivity::class.java) // Assuming you want to create a DrawActivity
+                            intent.putExtra("DRAW", true)
+                            startActivity(intent)
+                            finish()
+                        }
+                    }
+                }
+            }
         }
     }
 }
-
-@Composable
-fun GameScreen(playerName: String) {
-    val context = LocalContext.current
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "¡Bienvenido al juego, $playerName!",
-            fontSize = 28.sp,
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(onClick = {
-            val intent = Intent(context, VictoryActivity::class.java)
-            context.startActivity(intent)
-        }) {
-            Text("Simular Victoria")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(onClick = {
-            val intent = Intent(context, DefeatActivity::class.java)
-            context.startActivity(intent)
-        }) {
-            Text("Simular Derrota")
-        }
-    }
-}
-
-
