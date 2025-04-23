@@ -88,7 +88,6 @@ fun HomeScreen(onPlay: (String) -> Unit) {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Imagen
         Image(
             painter = painterResource(id = R.drawable.imagen),
             contentDescription = "Imagen del juego",
@@ -99,7 +98,6 @@ fun HomeScreen(onPlay: (String) -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // TextField
         TextField(
             value = userName,
             onValueChange = { userName = it },
@@ -126,7 +124,6 @@ fun HomeScreen(onPlay: (String) -> Unit) {
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Botón
         Button(
             onClick = { onPlay(if (userName.isBlank()) "Tú" else userName) },
             shape = RoundedCornerShape(50),
@@ -141,5 +138,11 @@ fun HomeScreen(onPlay: (String) -> Unit) {
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenPreview() {
+    HomeScreen(onPlay = {})
 }
 
