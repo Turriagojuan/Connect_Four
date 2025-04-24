@@ -1,4 +1,4 @@
-// ResultScreen.kt
+
 package com.example.connect_four
 
 import androidx.compose.foundation.background
