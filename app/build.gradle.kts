@@ -56,4 +56,10 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7") // Usa la última versión estable
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
+    implementation("androidx.compose.runtime:runtime-livedata:1.8.0") // O la versión correspondiente a tu compose bom
+
+    // Para LazyVerticalGrid (si no está ya por otra dependencia de Compose UI)
+    implementation("androidx.compose.foundation:foundation:1.8.0")
 }
