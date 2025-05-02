@@ -36,6 +36,10 @@
             android:name=".DefeatActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".TieActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

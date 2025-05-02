@@ -130,14 +130,11 @@ class GameViewModel : ViewModel() {
         if (checkWin(Player.USER)) {
             // Actualiza el estado a USER_WINS y deshabilita el juego.
             _uiState.update { it.copy(status = GameStatus.USER_WINS, canPlay = false) }
-            // La UI reaccionará a este cambio de estado (navegando a VictoryActivity).
             return
         }
-        // Comprueba si el movimiento actual resultó en empate.
+        // Comprueba si el movimiento actual resultó en empate.  Esto DEBE ir antes de cambiar el turno a la CPU.
         if (checkDraw()) {
-            // Actualiza el estado a DRAW y deshabilita el juego.
             _uiState.update { it.copy(status = GameStatus.DRAW, canPlay = false) }
-            // La UI reaccionará a este cambio de estado (navegando a DefeatActivity).
             return
         }
 
@@ -191,14 +188,11 @@ class GameViewModel : ViewModel() {
             if (checkWin(Player.CPU)) {
                 // Actualiza el estado a CPU_WINS y deshabilita el juego.
                 _uiState.update { it.copy(status = GameStatus.CPU_WINS, canPlay = false) }
-                // La UI reaccionará navegando a DefeatActivity.
                 return
             }
-            // Comprueba si hubo empate tras el movimiento de la CPU.
+            // Comprueba si hubo empate tras el movimiento de la CPU. Esto DEBE ir antes de devolver el turno al jugador.
             if (checkDraw()) {
-                // Actualiza el estado a DRAW y deshabilita el juego.
                 _uiState.update { it.copy(status = GameStatus.DRAW, canPlay = false) }
-                // La UI reaccionará navegando a DefeatActivity.
                 return
             }
 
@@ -217,7 +211,7 @@ class GameViewModel : ViewModel() {
      * Recorre la columna desde abajo hacia arriba.
      *
      * @param columnIndex El índice de la columna a verificar.
-     * @return El índice de la fila disponible (0 a ROWS-1), o -1 si la columna está llena o es inválida.
+     * @return El índice de la fila disponible (0 a ROWS-1), o -1 si la columna está llena.
      */
     private fun findAvailableRow(columnIndex: Int): Int {
         // Comprobación de límites.
@@ -330,7 +324,6 @@ class GameViewModel : ViewModel() {
         // Corrección: 'none' es más directo: si ninguna está vacía.
         return _uiState.value.board[0].none { it is CellState.Empty }
     }
-
 
     /**
      * Restablece el juego a su estado inicial.

@@ -17,9 +17,9 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -51,8 +51,7 @@ import androidx.compose.ui.unit.sp
 /**
  * GameActivity: La Activity responsable de mostrar la pantalla del juego Conecta 4.
  * Obtiene datos del [GameViewModel], muestra la interfaz usando [GameScreen] (Jetpack Compose),
- * y maneja la navegación hacia las pantallas de resultado (Victoria/Derrota)
- * o de vuelta a la pantalla principal (MainActivity).
+ * y maneja la navegación hacia las pantallas de resultado (Victoria, Derrota o Empate).
  */
 class GameActivity : ComponentActivity() {
 
@@ -97,11 +96,19 @@ class GameActivity : ComponentActivity() {
                         // para que si el usuario vuelve atrás, el juego esté reiniciado.
                         gameViewModel.resetGame()
                     }
-                    // Si la CPU gana o hay empate... (Tratamos empate como derrota por ahora)
-                    GameStatus.CPU_WINS, GameStatus.DRAW -> {
+                    // Si la CPU gana...
+                    GameStatus.CPU_WINS -> {
                         // Crea un Intent para ir a DefeatActivity.
                         val intent = Intent(context, DefeatActivity::class.java)
                         startActivity(intent) // Inicia DefeatActivity.
+                        // Reinicia el juego en el ViewModel.
+                        gameViewModel.resetGame()
+                    }
+                    // Si hay un empate...
+                    GameStatus.DRAW -> {
+                        // Crea un Intent para ir a TieActivity.
+                        val intent = Intent(context, TieActivity::class.java)
+                        startActivity(intent) // Inicia TieActivity.
                         // Reinicia el juego en el ViewModel.
                         gameViewModel.resetGame()
                     }
@@ -136,7 +143,7 @@ class GameActivity : ComponentActivity() {
 
     /*
     // Opcional: Si quisieras forzar el reinicio del juego cada vez que
-    // el usuario vuelve a esta pantalla (por ejemplo, desde Victory/Defeat).
+    // el usuario vuelve a esta pantalla (por ejemplo, desde Victory/Defeat/Tie).
     override fun onResume() {
         super.onResume()
         gameViewModel.resetGame()
@@ -223,8 +230,8 @@ fun GameLogo(fontFamily: FontFamily) {
     // Box con fondo azul y forma redondeada.
     Box(
         modifier = Modifier
-            .width(212.dp)
-            .height(60.dp)
+            .width(212.dp) // Ancho del logo.
+            .height(60.dp) // Alto del logo.
             .background(color = Color(0xFF1A56B0), shape = RoundedCornerShape(50.dp)),
         contentAlignment = Alignment.Center
     ) {
@@ -309,7 +316,6 @@ fun PlayerChip(name: String, color: Color, isTurn: Boolean) {
     }
 }
 
-
 /**
  * Composable que dibuja el tablero de Conecta 4 (6x7).
  * Muestra las fichas según el estado del `board` y maneja los clics en las columnas.
@@ -318,7 +324,7 @@ fun PlayerChip(name: String, color: Color, isTurn: Boolean) {
  * @param boardColor Color de fondo del tablero.
  * @param userPieceColor Color de la ficha del usuario.
  * @param cpuPieceColor Color de la ficha de la CPU.
- * @param emptyCellColor Color para las celdas vacías.
+ * @param emptyCellColor Color para celdas vacías.
  * @param onColumnClick Lambda a ejecutar cuando se toca una columna.
  * @param enabled Boolean para habilitar o deshabilitar la interacción (clics).
  */
@@ -383,7 +389,6 @@ fun GameBoard(
     } // Fin Box
 }
 
-
 /**
  * Composable que dibuja una única celda (círculo) del tablero.
  *
@@ -415,7 +420,6 @@ fun BoardCell(
     )
     // No contiene nada dentro, es solo el círculo coloreado.
 }
-
 
 /**
  * Composable que muestra los botones de acción en la parte inferior de la pantalla.
