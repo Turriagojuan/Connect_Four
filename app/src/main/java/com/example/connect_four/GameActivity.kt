@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -181,7 +182,7 @@ fun GameScreen(
             .background(color = Color(0xfff5f5f5)) // Fondo gris claro general.
             .padding(16.dp), // Padding alrededor de la columna.
         horizontalAlignment = Alignment.CenterHorizontally, // Centra los elementos horizontalmente.
-        verticalArrangement = Arrangement.SpaceBetween // Coloca espacio entre elementos, empujando los botones hacia abajo.
+        verticalArrangement = Arrangement.Center // Centra los elementos verticalmente.
     ) {
         // 1. Logo del Juego
         GameLogo(fontFamily = jaroFont)
@@ -440,32 +441,31 @@ fun ActionButtons(
         horizontalArrangement = Arrangement.SpaceEvenly, // Distribuye espacio.
         verticalAlignment = Alignment.CenterVertically // Centra verticalmente.
     ) {
-        // Botón Izquierdo (Volver)
-        IconButton( // Botón que solo contiene un icono.
-            onClick = onBackClick, // Acción al hacer clic.
-            modifier = Modifier
-                .size(64.dp) // Tamaño del botón.
-                .clip(CircleShape) // Forma circular.
-                .background(Color(0xFFE3F2FD)) // Fondo azul claro.
-        ) {
-            Icon(
-                Icons.Default.ArrowBack, // Icono de flecha atrás de Material Icons.
-                contentDescription = "Volver al inicio", // Accesibilidad.
-                tint = Color(0xFF2196F3) // Color del icono (azul).
-            )
-        }
-
-        // Botón Derecho (Reiniciar)
+        // Botón izquierdo (Reiniciar)
         IconButton(
             onClick = onRestartClick, // Acción al hacer clic.
             modifier = Modifier
                 .size(64.dp) // Tamaño.
                 .clip(CircleShape) // Forma circular.
-                .background(Color(0xFFFFEBEE)) // Fondo rojo claro.
+                .background(Color(0xFFE3F2FD)) // Fondo azul claro.
         ) {
             Icon(
                 Icons.Default.Refresh, // Icono de refrescar de Material Icons.
                 contentDescription = "Reiniciar Juego", // Accesibilidad.
+                tint = Color(0xFF2196F3) // Color del icono (azul).
+            )
+        }
+        // Botón derecho (Volver)
+        IconButton( // Botón que solo contiene un icono.
+            onClick = onBackClick, // Acción al hacer clic.
+            modifier = Modifier
+                .size(64.dp) // Tamaño del botón.
+                .clip(CircleShape) // Forma circular.
+                .background(Color(0xFFFFEBEE)) // Fondo rojo claro.
+        ) {
+            Icon(
+                Icons.Default.ExitToApp, // Icono de flecha atrás de Material Icons.
+                contentDescription = "Volver al inicio", // Accesibilidad.
                 tint = Color(0xFFF44336) // Color del icono (rojo).
             )
         }
