@@ -15,6 +15,7 @@ import kotlin.random.Random
 
 /** Número de filas en el tablero de Conecta 4. */
 const val ROWS = 6
+
 /** Número de columnas en el tablero de Conecta 4. */
 const val COLS = 7
 
@@ -24,6 +25,7 @@ const val COLS = 7
 enum class Player {
     /** Representa al jugador humano. */
     USER,
+
     /** Representa al oponente controlado por la máquina (CPU). */
     CPU
 }
@@ -38,6 +40,7 @@ enum class Player {
 sealed class CellState {
     /** Representa una celda vacía. */
     object Empty : CellState()
+
     /**
      * Representa una celda ocupada por una ficha.
      * @property player El jugador (USER o CPU) que ocupa la celda.
@@ -51,10 +54,13 @@ sealed class CellState {
 enum class GameStatus {
     /** La partida está en curso. */
     ONGOING,
+
     /** El jugador humano (USER) ha ganado. */
     USER_WINS,
+
     /** La máquina (CPU) ha ganado. */
     CPU_WINS,
+
     /** La partida ha terminado en empate (tablero lleno sin ganador). */
     DRAW
 }
@@ -154,8 +160,14 @@ class GameViewModel : ViewModel() {
         viewModelScope.launch {
             // Pausa breve antes de que la CPU juegue (simulación).
             delay(800) // 0.8 segundos
-            // Ejecuta la lógica de selección de movimiento de la CPU.
-            cpuMove()
+            // Ejecuta la lógica de selección de movimiento de la CPU mejorada.
+            val cpuColumn = findBestCpuMove()
+            if (cpuColumn != -1) {
+                dropPieceForCpu(cpuColumn)
+            } else {
+                // Si no se encuentra un buen movimiento, elige una columna al azar.
+                cpuMoveRandom()
+            }
             // Vuelve a habilitar la interacción del usuario SI el juego sigue en curso después del movimiento de la CPU.
             if (_uiState.value.status == GameStatus.ONGOING) {
                 _uiState.update { it.copy(canPlay = true) }
@@ -164,10 +176,9 @@ class GameViewModel : ViewModel() {
     }
 
     /**
-     * Ejecuta la lógica para el movimiento de la CPU.
-     * Actualmente, implementa una estrategia muy simple: elige una columna válida al azar.
+     * Ejecuta un movimiento aleatorio para la CPU.
      */
-    private fun cpuMove() {
+    private fun cpuMoveRandom() {
         // No hacer nada si el juego ya ha terminado.
         if (_uiState.value.status != GameStatus.ONGOING) return
 
@@ -177,33 +188,138 @@ class GameViewModel : ViewModel() {
             column = Random.nextInt(COLS) // Elige un índice de columna aleatorio (0 a COLS-1).
         } while (findAvailableRow(column) == -1) // Repite si la columna aleatoria está llena.
 
-        // Obtiene la fila disponible en la columna seleccionada.
-        val targetRow = findAvailableRow(column)
-        // Este cheque no debería fallar debido al bucle anterior, pero es una buena práctica.
-        if (targetRow != -1) {
-            // Actualiza el tablero con la ficha de la CPU.
-            updateBoard(targetRow, column, Player.CPU)
+        dropPieceForCpu(column)
+    }
 
-            // Comprueba si la CPU ganó con este movimiento.
+    /**
+     * Simula la acción de soltar una pieza para la CPU en una columna dada.
+     * Realiza las actualizaciones necesarias en el tablero y comprueba el estado del juego.
+     *
+     * @param columnIndex El índice de la columna donde la CPU soltará la ficha.
+     */
+    private fun dropPieceForCpu(columnIndex: Int) {
+        val targetRow = findAvailableRow(columnIndex)
+        if (targetRow != -1) {
+            updateBoard(targetRow, columnIndex, Player.CPU)
             if (checkWin(Player.CPU)) {
-                // Actualiza el estado a CPU_WINS y deshabilita el juego.
                 _uiState.update { it.copy(status = GameStatus.CPU_WINS, canPlay = false) }
                 return
             }
-            // Comprueba si hubo empate tras el movimiento de la CPU. Esto DEBE ir antes de devolver el turno al jugador.
             if (checkDraw()) {
                 _uiState.update { it.copy(status = GameStatus.DRAW, canPlay = false) }
                 return
             }
-
-            // Si el juego continúa, devuelve el turno al usuario.
             _uiState.update { it.copy(currentPlayer = Player.USER) }
         }
-        // Asegura que la interacción del usuario esté habilitada después del turno de la CPU,
-        // si el juego aún está en curso. Esto se maneja también en triggerCpuMove.
-        if (_uiState.value.status == GameStatus.ONGOING) {
-            _uiState.update { it.copy(canPlay = true) }
+    }
+
+    /**
+     * Implementación de una lógica de juego más inteligente para la CPU.
+     * Busca movimientos que puedan llevar a una victoria para la CPU o bloquear una victoria del usuario.
+     *
+     * @return El índice de la columna donde la CPU debería jugar, o -1 si no se encuentra un movimiento estratégico.
+     */
+    private fun findBestCpuMove(): Int {
+        // **Prioridad 1: Buscar movimiento ganador para la CPU**
+        for (col in 0 until COLS) {
+            val row = findAvailableRow(col)
+            if (row != -1) {
+                // Simula el movimiento de la CPU
+                val tempBoard = _uiState.value.board.map { it.toMutableList() }.toMutableList()
+                tempBoard[row][col] = CellState.Occupied(Player.CPU)
+                // Comprueba si este movimiento simulado resulta en una victoria para la CPU
+                if (checkWinForBoard(tempBoard.map { it.toList() }, Player.CPU)) {
+                    return col // ¡Encontró un movimiento ganador!
+                }
+            }
         }
+
+        // **Prioridad 2: Bloquear movimiento ganador del usuario**
+        for (col in 0 until COLS) {
+            val row = findAvailableRow(col)
+            if (row != -1) {
+                // Simula el movimiento del usuario
+                val tempBoard = _uiState.value.board.map { it.toMutableList() }.toMutableList()
+                tempBoard[row][col] = CellState.Occupied(Player.USER)
+                // Comprueba si este movimiento simulado resultaría en una victoria para el usuario
+                if (checkWinForBoard(tempBoard.map { it.toList() }, Player.USER)) {
+                    return col // ¡Encontró un movimiento para bloquear al usuario!
+                }
+            }
+        }
+
+        // **Prioridad 3: Considerar crear una potencial secuencia de 3**
+        // (Esta es una estrategia más avanzada y podría implementarse aquí)
+        // Por ahora, si no hay movimientos ganadores o de bloqueo obvios, se elige un movimiento aleatorio.
+
+        // Si no se encontraron movimientos estratégicos, devuelve -1 para que la CPU elija aleatoriamente.
+        return -1
+    }
+
+    /**
+     * Función auxiliar para verificar si un jugador ha ganado en un tablero dado.
+     * Similar a `checkWin` pero toma un tablero específico como argumento.
+     *
+     * @param board El tablero a verificar.
+     * @param player El jugador para el que se verifica la victoria.
+     * @return `true` si el jugador ha ganado en el tablero dado, `false` en caso contrario.
+     */
+    private fun checkWinForBoard(board: List<List<CellState>>, player: Player): Boolean {
+        val targetState = CellState.Occupied(player)
+
+        // Comprobación Horizontal
+        for (r in 0 until ROWS) {
+            for (c in 0 until COLS - 3) {
+                if (board[r][c] == targetState &&
+                    board[r][c + 1] == targetState &&
+                    board[r][c + 2] == targetState &&
+                    board[r][c + 3] == targetState
+                ) {
+                    return true
+                }
+            }
+        }
+
+        // Comprobación Vertical
+        for (r in 0 until ROWS - 3) {
+            for (c in 0 until COLS) {
+                if (board[r][c] == targetState &&
+                    board[r + 1][c] == targetState &&
+                    board[r + 2][c] == targetState &&
+                    board[r + 3][c] == targetState
+                ) {
+                    return true
+                }
+            }
+        }
+
+        // Comprobación Diagonal (Descendente)
+        for (r in 0 until ROWS - 3) {
+            for (c in 0 until COLS - 3) {
+                if (board[r][c] == targetState &&
+                    board[r + 1][c + 1] == targetState &&
+                    board[r + 2][c + 2] == targetState &&
+                    board[r + 3][c + 3] == targetState
+                ) {
+                    return true
+                }
+            }
+        }
+
+        // Comprobación Diagonal (Ascendente)
+        for (r in 3 until ROWS) {
+            for (c in 0 until COLS - 3) {
+                if (board[r][c] == targetState &&
+                    board[r - 1][c + 1] == targetState &&
+                    board[r - 2][c + 2] == targetState &&
+                    board[r - 3][c + 3] == targetState
+                ) {
+                    return true
+                }
+            }
+        }
+
+        return false
     }
 
     /**
@@ -256,59 +372,7 @@ class GameViewModel : ViewModel() {
      * @return `true` si el jugador ha ganado, `false` en caso contrario.
      */
     private fun checkWin(player: Player): Boolean {
-        val board = _uiState.value.board
-        val targetState = CellState.Occupied(player) // Estado de celda que buscamos.
-
-        // Comprobación Horizontal (4 en línea)
-        for (r in 0 until ROWS) { // Por cada fila
-            for (c in 0 until COLS - 3) { // Por cada columna inicial posible (dejando espacio para 3 más)
-                if (board[r][c] == targetState &&
-                    board[r][c + 1] == targetState &&
-                    board[r][c + 2] == targetState &&
-                    board[r][c + 3] == targetState) {
-                    return true // ¡Victoria horizontal encontrada!
-                }
-            }
-        }
-
-        // Comprobación Vertical (4 en línea)
-        for (r in 0 until ROWS - 3) { // Por cada fila inicial posible (dejando espacio para 3 más abajo)
-            for (c in 0 until COLS) { // Por cada columna
-                if (board[r][c] == targetState &&
-                    board[r + 1][c] == targetState &&
-                    board[r + 2][c] == targetState &&
-                    board[r + 3][c] == targetState) {
-                    return true // ¡Victoria vertical encontrada!
-                }
-            }
-        }
-
-        // Comprobación Diagonal (Descendente hacia la derecha \)
-        for (r in 0 until ROWS - 3) { // Por cada fila inicial posible
-            for (c in 0 until COLS - 3) { // Por cada columna inicial posible
-                if (board[r][c] == targetState &&
-                    board[r + 1][c + 1] == targetState &&
-                    board[r + 2][c + 2] == targetState &&
-                    board[r + 3][c + 3] == targetState) {
-                    return true // ¡Victoria diagonal \ encontrada!
-                }
-            }
-        }
-
-        // Comprobación Diagonal (Ascendente hacia la derecha /)
-        for (r in 3 until ROWS) { // Por cada fila inicial posible (empezando desde la fila 3)
-            for (c in 0 until COLS - 3) { // Por cada columna inicial posible
-                if (board[r][c] == targetState &&
-                    board[r - 1][c + 1] == targetState &&
-                    board[r - 2][c + 2] == targetState &&
-                    board[r - 3][c + 3] == targetState) {
-                    return true // ¡Victoria diagonal / encontrada!
-                }
-            }
-        }
-
-        // Si ninguna de las comprobaciones anteriores encontró una victoria.
-        return false
+        return checkWinForBoard(_uiState.value.board, player)
     }
 
     /**
@@ -352,3 +416,4 @@ class GameViewModel : ViewModel() {
         }
     }
 }
+
