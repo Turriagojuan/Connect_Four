@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -40,7 +41,8 @@ android {
 }
 
 dependencies {
-
+    implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
+    implementation("com.google.firebase:firebase-analytics")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -59,7 +61,6 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7") // Usa la última versión estable
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
     implementation("androidx.compose.runtime:runtime-livedata:1.8.0") // O la versión correspondiente a tu compose bom
-
     // Para LazyVerticalGrid (si no está ya por otra dependencia de Compose UI)
     implementation("androidx.compose.foundation:foundation:1.8.0")
 }
