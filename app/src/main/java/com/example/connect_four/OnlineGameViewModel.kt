@@ -96,20 +96,23 @@ class OnlineGameViewModel(private val gameId: String) : ViewModel() {
         val currentGame = game.value ?: return
         if (!_uiState.value.canPlay || currentGame.currentPlayerId != FirebaseService.getCurrentUserId()) return
 
-        val board = currentGame.board.map { it.toMutableList() }
-        val targetRow = (5 downTo 0).firstOrNull { board[it][columnIndex] == 0 }
+        // SOLUCIÓN: Cambia la forma en que se crea la copia del tablero
+        val board = currentGame.board.toMutableList()
+        // SOLUCIÓN: Lógica para encontrar la fila objetivo en una lista 1D
+        val targetRow = (5 downTo 0).firstOrNull { board[it * 7 + columnIndex] == 0 }
 
         if (targetRow != null) {
             val playerNumber = if (currentGame.currentPlayerId == currentGame.player1Id) 1 else 2
-            board[targetRow][columnIndex] = playerNumber
+            // SOLUCIÓN: Actualiza el tablero 1D
+            board[targetRow * 7 + columnIndex] = playerNumber
 
             val nextPlayerId = if (playerNumber == 1) currentGame.player2Id!! else currentGame.player1Id
-            val newBoardState = board.map { it.toList() }
+            // La nueva lista ya es `board`, que es una lista simple
+            val newBoardState = board.toList()
 
-            // Lógica de victoria/empate simplificada
-            // (Una implementación completa revisaría horizontales, verticales y diagonales)
             val winnerId = if (checkWin(newBoardState, playerNumber)) currentGame.currentPlayerId else null
-            val isDraw = newBoardState.all { row -> row.all { it != 0 } }
+            // SOLUCIÓN: Lógica de empate para el tablero 1D
+            val isDraw = newBoardState.all { it != 0 }
             val newStatus = when {
                 winnerId != null -> "FINISHED"
                 isDraw -> "FINISHED"
@@ -125,27 +128,37 @@ class OnlineGameViewModel(private val gameId: String) : ViewModel() {
                 if(winnerId != null) updates["winnerId"] = winnerId
 
                 FirebaseService.updateGame(gameId, updates)
-                _uiState.update { it.copy(canPlay = false) } // Bloquear hasta el próximo turno
+                _uiState.update { it.copy(canPlay = false) }
             }
         }
     }
 
     // Función de chequeo de victoria simple (puedes mejorarla)
-    private fun checkWin(board: List<List<Int>>, playerNumber: Int): Boolean {
-        // Horizontal
+    private fun checkWin(board: List<Int>, playerNumber: Int): Boolean {
+        // Comprobación Horizontal
         for (r in 0..5) {
             for (c in 0..3) {
-                if ((0..3).all { board[r][c + it] == playerNumber }) return true
+                if ((0..3).all { board[r * 7 + (c + it)] == playerNumber }) return true
             }
         }
-        // Vertical
+        // Comprobación Vertical
         for (r in 0..2) {
             for (c in 0..6) {
-                if ((0..3).all { board[r + it][c] == playerNumber }) return true
+                if ((0..3).all { board[(r + it) * 7 + c] == playerNumber }) return true
             }
         }
-        // Diagonales (simplificado)
-        // ... (implementa la lógica completa)
+        // Comprobación Diagonal (descendente, \)
+        for (r in 0..2) {
+            for (c in 0..3) {
+                if ((0..3).all { board[(r + it) * 7 + (c + it)] == playerNumber }) return true
+            }
+        }
+        // Comprobación Diagonal (ascendente, /)
+        for (r in 3..5) {
+            for (c in 0..3) {
+                if ((0..3).all { board[(r - it) * 7 + (c + it)] == playerNumber }) return true
+            }
+        }
         return false
     }
 }

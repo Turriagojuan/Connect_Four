@@ -116,9 +116,10 @@ fun PlayerHeader(name: String, color: Color, isTurn: Boolean) {
     }
 }
 
+
 @Composable
 fun OnlineGameBoard(
-    board: List<List<Int>>,
+    board: List<Int>, // El parámetro ahora es List<Int> para que coincida con la clase Game
     player1Color: Color,
     player2Color: Color,
     onColumnClick: (Int) -> Unit,
@@ -135,7 +136,8 @@ fun OnlineGameBoard(
             repeat(6) { rowIndex ->
                 Row(Modifier.weight(1f)) {
                     repeat(7) { colIndex ->
-                        val cellValue = board[rowIndex][colIndex]
+                        // Se calcula el índice correcto para la lista 1D
+                        val cellValue = board[rowIndex * 7 + colIndex]
                         val color = when (cellValue) {
                             1 -> player1Color
                             2 -> player2Color
@@ -158,33 +160,43 @@ fun OnlineGameBoard(
     }
 }
 
-@Composable
-fun VocabularyQuizDialog(
-    word: String,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
-) {
-    var text by remember { mutableStateOf("") }
-    Dialog(onDismissRequest = onDismiss) {
-        Card {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("¡Pregunta de Vocabulario!", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Traduce la siguiente palabra al inglés:")
-                Text("'$word'", fontSize = 22.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(8.dp))
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    label = { Text("Tu respuesta") }
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = { onConfirm(text) }) {
-                    Text("Confirmar")
+        @Composable
+        fun VocabularyQuizDialog(
+            word: String,
+            onDismiss: () -> Unit,
+            onConfirm: (String) -> Unit
+        ) {
+            var text by remember { mutableStateOf("") }
+            Dialog(onDismissRequest = onDismiss) {
+                Card {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            "¡Pregunta de Vocabulario!",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Traduce la siguiente palabra al inglés:")
+                        Text(
+                            "'$word'",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                        OutlinedTextField(
+                            value = text,
+                            onValueChange = { text = it },
+                            label = { Text("Tu respuesta") }
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = { onConfirm(text) }) {
+                            Text("Confirmar")
+                        }
+                    }
                 }
             }
         }
-    }
-}
+
