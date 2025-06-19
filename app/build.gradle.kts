@@ -41,6 +41,12 @@ android {
 }
 
 dependencies {
+
+
+    // DEPENDENCIAS PARA LA FUNCIONALIDAD ONLINE (SIN STORAGE)
+    implementation("com.google.firebase:firebase-auth-ktx") // Para autenticación
+    implementation("com.google.firebase:firebase-firestore-ktx") // Para base de datos
+
     implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation(libs.androidx.core.ktx)
@@ -51,6 +57,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.firebase.firestore.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

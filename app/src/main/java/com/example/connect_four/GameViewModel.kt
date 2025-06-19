@@ -39,7 +39,7 @@ enum class Player {
  */
 sealed class CellState {
     /** Representa una celda vacía. */
-    object Empty : CellState()
+    data object Empty : CellState() // <--- ESTA ES LA LÍNEA CORREGIDA
 
     /**
      * Representa una celda ocupada por una ficha.
